@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import './components/transaction_form.dart';
 import './components/transaction_list.dart';
 import './models/transaction.dart';
+//import 'package:flutter/services.dart';
 import './components/chart.dart';
 
 main() => runApp(ExpensesApp());
@@ -10,6 +11,13 @@ main() => runApp(ExpensesApp());
 class ExpensesApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    /* Travar orientação de tela em modo retrato
+
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
+
+    */
     return MaterialApp(
       home: MyHomePage(),
       theme: ThemeData(
@@ -48,11 +56,14 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final _transactions = <Transaction>[];
+  bool _showChart = false;
 
   List<Transaction> get _recentTransactions {
-    return _transactions.where((tr) {
-      return tr.date.isAfter(DateTime.now().subtract(Duration(days: 7)));
-    }).toList();
+    return _transactions.where(
+      (tr) {
+        return tr.date.isAfter(DateTime.now().subtract(Duration(days: 7)));
+      },
+    ).toList();
   }
 
   _addTransaction(String title, double value, DateTime date) {
@@ -73,9 +84,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _removeTransaction(String id) {
-    setState(() {
-      _transactions.removeWhere((transaction) => transaction.id == id);
-    });
+    setState(
+      () {
+        _transactions.removeWhere((transaction) => transaction.id == id);
+      },
+    );
   }
 
   _openTransactionFormModal(BuildContext context) {
@@ -89,24 +102,53 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Despesas Pessoais',
+    bool isLandScape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+
+    final appBar = AppBar(
+      title: Text(
+        'Despesas Pessoais',
+        style: TextStyle(
+          fontSize: 20 * MediaQuery.of(context).textScaleFactor,
         ),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () => _openTransactionFormModal(context),
-          ),
-        ],
       ),
+      actions: <Widget>[
+        if (isLandScape)
+          IconButton(
+            icon: Icon(_showChart ? Icons.list : Icons.insert_chart),
+            onPressed: () {
+              setState(() {
+                _showChart = !_showChart;
+              });
+            },
+          ),
+        IconButton(
+          icon: Icon(Icons.add),
+          onPressed: () => _openTransactionFormModal(context),
+        ),
+      ],
+    );
+
+    final availableHeight = MediaQuery.of(context).size.height -
+        appBar.preferredSize.height -
+        MediaQuery.of(context).padding.top;
+
+    return Scaffold(
+      appBar: appBar,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Chart(_recentTransactions),
-            TransactionList(_transactions, _removeTransaction),
+            if (_showChart || !isLandScape)
+              Container(
+                height: availableHeight * (isLandScape ? 0.6 : 0.25),
+                child: Chart(_recentTransactions),
+              ),
+            if (!_showChart || !isLandScape)
+              Container(
+                height: availableHeight * (isLandScape ? 1 : 0.75),
+                child: TransactionList(_transactions, _removeTransaction),
+              ),
           ],
         ),
       ),
