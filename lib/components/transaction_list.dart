@@ -41,7 +41,7 @@ class TransactionList extends StatelessWidget {
             itemBuilder: (ctx, index) {
               final transaction = _transactions[index];
               return Card(
-                margin: EdgeInsets.fromLTRB(20, 0, 20, 6),
+                margin: EdgeInsets.fromLTRB(20, 10, 20, 0),
                 elevation: 2,
                 child: ListTile(
                   leading: CircleAvatar(
@@ -60,11 +60,18 @@ class TransactionList extends StatelessWidget {
                   subtitle: Text(
                     DateFormat('d MMM y').format(transaction.date),
                   ),
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete),
-                    color: Theme.of(context).errorColor,
-                    onPressed: () => _onRemove(transaction.id),
-                  ),
+                  trailing: MediaQuery.of(context).size.width > 480
+                      ? FlatButton.icon(
+                          icon: Icon(Icons.delete),
+                          onPressed: () => _onRemove(transaction.id),
+                          label: Text('Excluir'),
+                          textColor: Theme.of(context).errorColor,
+                        )
+                      : IconButton(
+                          icon: Icon(Icons.delete),
+                          color: Theme.of(context).errorColor,
+                          onPressed: () => _onRemove(transaction.id),
+                        ),
                 ),
               );
             },
